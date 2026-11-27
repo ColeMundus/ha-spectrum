@@ -1,0 +1,420 @@
+add_port_forward:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: true
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+    external_port:
+      required: true
+      example: 8443
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    internal_port:
+      required: false
+      example: 443
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    protocol:
+      required: false
+      default: TCP
+      selector:
+        select:
+          options:
+            - TCP
+            - UDP
+            - TCP_AND_UDP
+    name:
+      required: false
+      example: "Home Server"
+      selector:
+        text:
+    ip_address:
+      required: false
+      example: "192.168.1.50"
+      selector:
+        text:
+    auto_reserve:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+update_port_forward:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: true
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+    external_port:
+      required: true
+      example: 8443
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    internal_port:
+      required: false
+      example: 443
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    protocol:
+      required: false
+      selector:
+        select:
+          options:
+            - TCP
+            - UDP
+            - TCP_AND_UDP
+    name:
+      required: false
+      example: "Home Server"
+      selector:
+        text:
+    new_external_port:
+      required: false
+      example: 8444
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+    recreate:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+delete_port_forward:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: true
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+    external_port:
+      required: true
+      example: 8443
+      selector:
+        number:
+          min: 1
+          max: 65535
+          mode: box
+
+list_port_forwards:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: false
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+
+set_ip_reservation:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: true
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+    ip_address:
+      required: true
+      example: "192.168.1.50"
+      selector:
+        text:
+
+delete_ip_reservation:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: true
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+
+set_access_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    target_type:
+      required: true
+      default: client
+      selector:
+        select:
+          options:
+            - client
+            - client_group
+    target:
+      required: true
+      example: "Kids Tablet"
+      selector:
+        text:
+    name:
+      required: true
+      example: "School Nights"
+      selector:
+        text:
+    start_time:
+      required: true
+      example: "21:00"
+      selector:
+        time:
+    end_time:
+      required: true
+      example: "07:00"
+      selector:
+        time:
+    days_of_week:
+      required: true
+      selector:
+        select:
+          multiple: true
+          options:
+            - SUN
+            - MON
+            - TUE
+            - WED
+            - THU
+            - FRI
+            - SAT
+    enabled:
+      required: false
+      default: true
+      selector:
+        boolean:
+    create:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+set_dns:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    custom_enabled:
+      required: true
+      selector:
+        boolean:
+    primary:
+      required: false
+      example: "1.1.1.1"
+      selector:
+        text:
+    secondary:
+      required: false
+      example: "1.0.0.1"
+      selector:
+        text:
+
+update_wifi:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    ssid:
+      required: true
+      selector:
+        text:
+    password:
+      required: true
+      selector:
+        text:
+          type: password
+    access_point_id:
+      required: false
+      selector:
+        text:
+
+set_additional_network:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    ssid:
+      required: true
+      selector:
+        text:
+    password:
+      required: true
+      selector:
+        text:
+          type: password
+    broadcast:
+      required: false
+      default: true
+      selector:
+        boolean:
+    create:
+      required: false
+      default: false
+      selector:
+        boolean:
+
+delete_additional_network:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+
+rename_client:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: true
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+    new_name:
+      required: true
+      example: "Living Room TV"
+      selector:
+        text:
+    icon_reference:
+      required: false
+      default: DEFAULT
+      selector:
+        text:
+
+remove_client:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    client:
+      required: true
+      example: "AA:BB:CC:DD:EE:FF"
+      selector:
+        text:
+
+create_client_group:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    name:
+      required: true
+      example: "Kids"
+      selector:
+        text:
+    clients:
+      required: false
+      selector:
+        text:
+          multiple: true
+
+update_client_group:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    group:
+      required: true
+      example: "Kids"
+      selector:
+        text:
+    name:
+      required: true
+      example: "Kids"
+      selector:
+        text:
+    clients:
+      required: true
+      selector:
+        text:
+          multiple: true
+
+delete_client_group:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    group:
+      required: true
+      example: "Kids"
+      selector:
+        text:
+
+run_speed_test:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: spectrum
+    operation:
+      required: false
+      selector:
+        select:
+          options:
+            - ROUTER
+            - MODEM_DOWNLOAD
+            - MODEM_UPLOAD
+    wait:
+      required: false
+      default: true
+      selector:
+        boolean:

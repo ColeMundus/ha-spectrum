@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify release version and build archive
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          import pathlib
+          import zipfile
+
+          tag = os.environ["TAG_NAME"]
+          manifest = json.loads(
+              pathlib.Path("custom_components/spectrum/manifest.json").read_text(encoding="utf-8")
+          )
+          version = manifest["version"]
+          if tag != f"v{version}":
+              raise SystemExit(f"Tag {tag} does not match manifest version v{version}")
+
+          dist = pathlib.Path("dist")
+          dist.mkdir(exist_ok=True)
+          zip_path = dist / f"spectrum-{version}.zip"
+          root = pathlib.Path("custom_components/spectrum")
+          files = sorted(
+              p for p in root.rglob("*")
+              if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"
+          )
+          with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+              for path in files:
+                  info = zipfile.ZipInfo(path.as_posix(), date_time=(2026, 1, 1, 0, 0, 0))
+                  info.compress_type = zipfile.ZIP_DEFLATED
+                  info.external_attr = 0o644 << 16
+                  archive.writestr(info, path.read_bytes())
+
+          digest = hashlib.sha256(zip_path.read_bytes()).hexdigest()
+          (dist / f"spectrum-{version}.zip.sha256").write_text(
+              f"{digest}  {zip_path.name}\n", encoding="utf-8"
+          )
+          PY
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG_NAME" dist/* --clobber

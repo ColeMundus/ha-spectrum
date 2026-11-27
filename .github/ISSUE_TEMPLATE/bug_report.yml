@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a bug in Spectrum for Home Assistant.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Never include OAuth tokens, `msaauth://` redirect URLs, authorization codes,
+        Wi-Fi passphrases, account numbers, MAC addresses, or serial numbers.
+  - type: input
+    id: home_assistant_version
+    attributes:
+      label: Home Assistant version
+      placeholder: 2026.10.0
+    validations:
+      required: true
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Authentication / Config Flow
+        - Account / Outage / Billing Summary
+        - Router / Modem / Pod / Set-Top Box
+        - Clients / Client Groups / Access Schedules
+        - IP Reservations / Port Forwards
+        - Wi-Fi Network / Additional Network / QR Code
+        - Actions / Services
+        - Diagnostics / Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Describe what you did and what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Sanitized logs or diagnostics
+      description: Remove any tokens, account identifiers, MACs, or personal information before posting.
+      render: text

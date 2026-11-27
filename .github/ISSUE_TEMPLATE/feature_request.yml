@@ -1,0 +1,25 @@
+name: Feature request
+description: Suggest a new entity, action, or improvement for Spectrum for Home Assistant.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What Home Assistant automation or monitoring need are you trying to solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the entity, action, or option you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Hardware model (Router, Modem, Pod, Set-Top Box) or My Spectrum app feature details.

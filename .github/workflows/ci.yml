@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 9 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.12.19"
+          python-version: "3.14.7"
+          enable-cache: true
+      - run: uv sync --no-sources
+      - run: uv pip check
+      - run: git diff --check
+      - run: uv run --no-sync ruff check .
+      - run: uv run --no-sync ruff format --check .
+      - run: uv run --no-sync mypy
+      - run: uv run --no-sync pytest --cov=custom_components/spectrum --cov-report=term-missing --cov-fail-under=95
+
+  hassfest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: home-assistant/actions/hassfest@86d4564712fa02543c808e3a693dd04f9d3f8361
+
+  hacs:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hacs/action@d556e736723344f83838d08488c983a15381059a # 22.5.0
+        with:
+          category: integration
+
+  required:
+    if: always()
+    needs: [checks, hassfest, hacs]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Required checks
+        env:
+          CHECKS: ${{ needs.checks.result }}
+          HASSFEST: ${{ needs.hassfest.result }}
+          HACS: ${{ needs.hacs.result }}
+          PRIVATE: ${{ github.event.repository.private }}
+        run: |
+          test "$CHECKS" = success
+          test "$HASSFEST" = success
+          test "$HACS" = success || { test "$PRIVATE" = true && test "$HACS" = skipped; }

@@ -1,0 +1,786 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect Spectrum Account",
+        "description": "1. Open the [Spectrum sign-in page]({login_url}) in your browser and sign in to your Spectrum residential Account.\n2. After sign-in, your browser will redirect to a `{redirect_example}` address (an unsupported-protocol or blank page is expected).\n3. Copy the full redirect URL (or just the authorization code) from your browser address bar and paste it below.",
+        "data": {
+          "redirect_url": "Redirect URL or authorization code"
+        },
+        "data_description": {
+          "redirect_url": "Paste the full sign-in redirect URL from your browser address bar or the bare authorization code."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Spectrum Account",
+        "description": "Your Spectrum session has expired or been revoked. Open the [Spectrum sign-in page]({login_url}), sign in to the same Account, and paste the `{redirect_example}` redirect URL or authorization code below.",
+        "data": {
+          "redirect_url": "Redirect URL or authorization code"
+        },
+        "data_description": {
+          "redirect_url": "Paste the full sign-in redirect URL from your browser address bar or the bare authorization code."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Spectrum Account",
+        "description": "Refresh credentials for your existing Spectrum Account. Open the [Spectrum sign-in page]({login_url}), sign in to the same Account, and paste the `{redirect_example}` redirect URL or authorization code below.",
+        "data": {
+          "redirect_url": "Redirect URL or authorization code"
+        },
+        "data_description": {
+          "redirect_url": "Paste the full sign-in redirect URL from your browser address bar or the bare authorization code."
+        }
+      }
+    },
+    "error": {
+      "invalid_redirect": "Could not find an authorization code in the pasted URL or value.",
+      "invalid_auth": "Spectrum rejected the authorization code. Open the new sign-in link and try again.",
+      "cannot_connect": "Unable to reach Spectrum services. Check your connection and try again.",
+      "unknown": "An unexpected error occurred while signing in to Spectrum."
+    },
+    "abort": {
+      "already_configured": "This Spectrum Account is already configured.",
+      "reauth_successful": "Spectrum Account reauthenticated successfully.",
+      "reconfigure_successful": "Spectrum Account reconfigured successfully.",
+      "wrong_account": "The signed-in Spectrum Account does not match the existing configuration entry."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Spectrum options",
+        "description": "Configure polling intervals and Client presence tracker defaults.",
+        "data": {
+          "network_scan_interval": "Network and Client polling interval",
+          "equipment_scan_interval": "Hardware, Outage, and Service Appointment polling interval",
+          "account_scan_interval": "Billing Summary and plan polling interval",
+          "client_tracker_mode": "Client tracker default enablement"
+        },
+        "data_description": {
+          "network_scan_interval": "Seconds between Network, Client, Client Group, Security Shield, and Wi-Fi Coverage updates (30-600).",
+          "equipment_scan_interval": "Seconds between Router, Modem, Pod, Set-Top Box, Outage, and Service Appointment updates (60-3600).",
+          "account_scan_interval": "Seconds between Billing Summary and subscribed internet plan updates (300-86400).",
+          "client_tracker_mode": "Choose which discovered Clients have presence tracker entities enabled by default."
+        }
+      }
+    }
+  },
+  "selector": {
+    "client_tracker_mode": {
+      "options": {
+        "connected_or_reserved": "Connected or IP-reserved Clients",
+        "all": "All discovered Clients",
+        "disabled": "Disabled by default"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "active_outage": {
+        "name": "Active outage"
+      },
+      "outage_credit_eligible": {
+        "name": "Outage credit eligible"
+      },
+      "outage_credit_enrolled": {
+        "name": "Outage credit enrolled"
+      },
+      "outage_callback_eligible": {
+        "name": "Outage callback eligible"
+      },
+      "autopay": {
+        "name": "Autopay"
+      },
+      "delinquent": {
+        "name": "Past due"
+      },
+      "seasonal_suspend": {
+        "name": "Seasonal suspend"
+      },
+      "service_appointment_alert": {
+        "name": "Service appointment alert"
+      },
+      "connectivity": {
+        "name": "Connectivity"
+      },
+      "modem_connectivity": {
+        "name": "Modem connectivity"
+      },
+      "security_shield_threats_active": {
+        "name": "Security Shield threats active"
+      },
+      "additional_network_active": {
+        "name": "Additional Wi-Fi active"
+      },
+      "cellular_backup_ready": {
+        "name": "Cellular backup ready"
+      },
+      "cellular_backup_in_use": {
+        "name": "Cellular backup active"
+      },
+      "t4_timeout_threshold": {
+        "name": "T4 timeout threshold"
+      },
+      "ethernet_port_speed_healthy": {
+        "name": "Ethernet port speed"
+      },
+      "speed_achievable": {
+        "name": "Speed achievable"
+      },
+      "hot_listed": {
+        "name": "Hot-listed"
+      },
+      "quarantined": {
+        "name": "Quarantined"
+      }
+    },
+    "sensor": {
+      "outage_count": {
+        "name": "Active outages"
+      },
+      "outage_status": {
+        "name": "Outage status"
+      },
+      "outage_message": {
+        "name": "Outage message"
+      },
+      "outage_services_affected": {
+        "name": "Outage services affected"
+      },
+      "outage_estimated_resolution": {
+        "name": "Outage estimated resolution"
+      },
+      "outage_cause": {
+        "name": "Outage cause"
+      },
+      "next_service_appointment": {
+        "name": "Next service appointment"
+      },
+      "service_appointment_status": {
+        "name": "Service appointment status"
+      },
+      "service_appointment_count": {
+        "name": "Service appointments"
+      },
+      "current_balance": {
+        "name": "Current balance"
+      },
+      "amount_due": {
+        "name": "Amount due"
+      },
+      "past_due_amount": {
+        "name": "Past-due balance"
+      },
+      "pending_payment": {
+        "name": "Pending payment"
+      },
+      "last_payment": {
+        "name": "Last payment"
+      },
+      "upcoming_autopay_charge": {
+        "name": "Upcoming autopay charge"
+      },
+      "next_autopay_date": {
+        "name": "Next autopay date"
+      },
+      "payment_due_date": {
+        "name": "Payment due date"
+      },
+      "next_billing_cycle": {
+        "name": "Next billing cycle"
+      },
+      "account_status": {
+        "name": "Account status"
+      },
+      "monetary_status": {
+        "name": "Billing status"
+      },
+      "provisioned_services": {
+        "name": "Provisioned services"
+      },
+      "internet_plan": {
+        "name": "Internet plan"
+      },
+      "subscribed_download_speed": {
+        "name": "Subscribed download speed"
+      },
+      "subscribed_upload_speed": {
+        "name": "Subscribed upload speed"
+      },
+      "speed_test_download": {
+        "name": "Speed test download"
+      },
+      "speed_test_upload": {
+        "name": "Speed test upload"
+      },
+      "speed_test_latency": {
+        "name": "Speed test latency"
+      },
+      "speed_test_jitter": {
+        "name": "Speed test jitter"
+      },
+      "speed_test_packet_loss": {
+        "name": "Speed test packet loss"
+      },
+      "speed_test_last_run": {
+        "name": "Last speed test"
+      },
+      "speed_test_status": {
+        "name": "Speed test status"
+      },
+      "wifi_coverage_score": {
+        "name": "Wi-Fi coverage score"
+      },
+      "connected_clients": {
+        "name": "Connected clients"
+      },
+      "total_clients": {
+        "name": "Known clients"
+      },
+      "paused_clients": {
+        "name": "Paused clients"
+      },
+      "ip_reservation_count": {
+        "name": "IP reservations"
+      },
+      "port_forward_count": {
+        "name": "Port forwards"
+      },
+      "security_shield_threats": {
+        "name": "Security Shield threats"
+      },
+      "wan_ipv4": {
+        "name": "WAN IPv4 address"
+      },
+      "wan_ipv6": {
+        "name": "WAN IPv6 address"
+      },
+      "lan_ipv4": {
+        "name": "LAN IPv4 address"
+      },
+      "dns_mode": {
+        "name": "DNS mode"
+      },
+      "primary_dns": {
+        "name": "Primary DNS"
+      },
+      "secondary_dns": {
+        "name": "Secondary DNS"
+      },
+      "wifi_network_name": {
+        "name": "Wi-Fi network"
+      },
+      "wifi_password": {
+        "name": "Wi-Fi password"
+      },
+      "additional_network_name": {
+        "name": "Additional network"
+      },
+      "additional_network_password": {
+        "name": "Additional Wi-Fi password"
+      },
+      "connection_state": {
+        "name": "Connection state"
+      },
+      "modem_connection_state": {
+        "name": "Modem connection state"
+      },
+      "firmware_version": {
+        "name": "Firmware version"
+      },
+      "docsis_capability": {
+        "name": "DOCSIS capability"
+      },
+      "cellular_backup_signal": {
+        "name": "Cellular backup signal"
+      },
+      "cellular_backup_usage": {
+        "name": "Cellular backup data usage"
+      },
+      "cellular_backup_status": {
+        "name": "Cellular backup status"
+      },
+      "thread_channel": {
+        "name": "Thread channel"
+      },
+      "pod_connected_clients": {
+        "name": "Connected clients"
+      },
+      "pod_backhaul_type": {
+        "name": "Backhaul connection"
+      },
+      "pod_backhaul_frequency": {
+        "name": "Backhaul frequency"
+      },
+      "pod_coverage_score": {
+        "name": "Wi-Fi coverage score"
+      }
+    },
+    "switch": {
+      "security_shield": {
+        "name": "Security Shield"
+      },
+      "upnp": {
+        "name": "UPnP"
+      },
+      "hotspot": {
+        "name": "Spectrum Wi-Fi hotspot"
+      },
+      "thread_radio": {
+        "name": "Thread radio"
+      },
+      "client_group_pause": {
+        "name": "Pause {group_name}"
+      },
+      "client_pause": {
+        "name": "Pause {client_name}"
+      }
+    },
+    "button": {
+      "reboot": {
+        "name": "Reboot"
+      },
+      "reboot_modem": {
+        "name": "Reboot modem"
+      },
+      "run_speed_test": {
+        "name": "Run speed test"
+      },
+      "run_modem_speed_test": {
+        "name": "Run modem speed test"
+      },
+      "smart_steer": {
+        "name": "Smart steer clients"
+      },
+      "refresh": {
+        "name": "Refresh"
+      }
+    },
+    "select": {
+      "pod_led_mode": {
+        "name": "LED mode",
+        "state": {
+          "normal": "Normal",
+          "locate": "Locate"
+        }
+      }
+    },
+    "device_tracker": {
+      "client": {
+        "name": "{client_name}"
+      }
+    },
+    "image": {
+      "wifi_qr": {
+        "name": "Wi-Fi QR code"
+      },
+      "additional_network_qr": {
+        "name": "Additional network QR code"
+      }
+    }
+  },
+  "services": {
+    "add_port_forward": {
+      "name": "Add port forward",
+      "description": "Create a single-port IPv4 Port Forward on a Router for a Client.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Target Client MAC address, IPv4 address, ID, or name."
+        },
+        "external_port": {
+          "name": "External port",
+          "description": "External TCP/UDP port number (1-65535)."
+        },
+        "internal_port": {
+          "name": "Internal port",
+          "description": "Internal port on the Client (defaults to the external port)."
+        },
+        "protocol": {
+          "name": "Protocol",
+          "description": "Transport protocol (TCP, UDP, or TCP_AND_UDP)."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Optional label for the Port Forward."
+        },
+        "ip_address": {
+          "name": "IPv4 address",
+          "description": "IPv4 address to bind when auto-creating an IP Reservation."
+        },
+        "auto_reserve": {
+          "name": "Auto-create IP reservation",
+          "description": "Create or update an IP Reservation for the Client before adding the Port Forward."
+        }
+      }
+    },
+    "update_port_forward": {
+      "name": "Update port forward",
+      "description": "Update an existing Port Forward on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Target Client MAC address, IPv4 address, ID, or name."
+        },
+        "external_port": {
+          "name": "External port",
+          "description": "Current external port of the Port Forward."
+        },
+        "internal_port": {
+          "name": "Internal port",
+          "description": "Updated internal port number."
+        },
+        "protocol": {
+          "name": "Protocol",
+          "description": "Updated transport protocol."
+        },
+        "name": {
+          "name": "Name",
+          "description": "Updated label for the Port Forward."
+        },
+        "new_external_port": {
+          "name": "New external port",
+          "description": "Replacement external port (requires recreate enabled)."
+        },
+        "recreate": {
+          "name": "Recreate if external port changes",
+          "description": "Delete and recreate the Port Forward when changing the external port."
+        }
+      }
+    },
+    "delete_port_forward": {
+      "name": "Delete port forward",
+      "description": "Delete a Port Forward on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Target Client MAC address, IPv4 address, ID, or name."
+        },
+        "external_port": {
+          "name": "External port",
+          "description": "External port of the Port Forward to remove."
+        }
+      }
+    },
+    "list_port_forwards": {
+      "name": "List port forwards",
+      "description": "Return Port Forwards configured on a Router (optionally filtered to a single Client).",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to inspect."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Optional Client MAC address, IPv4 address, ID, or name."
+        }
+      }
+    },
+    "set_ip_reservation": {
+      "name": "Set IP reservation",
+      "description": "Create or update a fixed IPv4 IP Reservation for a Client on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Target Client MAC address, IPv4 address, ID, or name."
+        },
+        "ip_address": {
+          "name": "IPv4 address",
+          "description": "Fixed IPv4 address to reserve for the Client."
+        }
+      }
+    },
+    "delete_ip_reservation": {
+      "name": "Delete IP reservation",
+      "description": "Remove an IP Reservation for a Client on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Target Client MAC address, IPv4 address, ID, or name."
+        }
+      }
+    },
+    "set_access_schedule": {
+      "name": "Set access schedule",
+      "description": "Create or update a recurring Access Schedule for a Client or Client Group.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "target_type": {
+          "name": "Target type",
+          "description": "Whether the schedule applies to a Client or a Client Group."
+        },
+        "target": {
+          "name": "Target",
+          "description": "Client or Client Group identifier or name."
+        },
+        "name": {
+          "name": "Schedule name",
+          "description": "Display label for the Access Schedule."
+        },
+        "start_time": {
+          "name": "Start time",
+          "description": "24-hour start time (HH:MM) when internet access pauses."
+        },
+        "end_time": {
+          "name": "End time",
+          "description": "24-hour end time (HH:MM) when internet access resumes."
+        },
+        "days_of_week": {
+          "name": "Days of week",
+          "description": "Days on which the Access Schedule applies."
+        },
+        "enabled": {
+          "name": "Enabled",
+          "description": "Whether the Access Schedule is active."
+        },
+        "create": {
+          "name": "Create new schedule",
+          "description": "Set to true when creating an Access Schedule for the first time."
+        }
+      }
+    },
+    "set_dns": {
+      "name": "Set DNS",
+      "description": "Configure default or custom DNS servers on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "custom_enabled": {
+          "name": "Use custom DNS",
+          "description": "Enable custom IPv4 DNS servers instead of Spectrum defaults."
+        },
+        "primary": {
+          "name": "Primary DNS",
+          "description": "Primary IPv4 DNS server (required when custom DNS is enabled)."
+        },
+        "secondary": {
+          "name": "Secondary DNS",
+          "description": "Optional secondary IPv4 DNS server."
+        }
+      }
+    },
+    "update_wifi": {
+      "name": "Update Wi-Fi network",
+      "description": "Update the primary Wi-Fi Network name and password on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "ssid": {
+          "name": "Wi-Fi network name",
+          "description": "New name for the primary Wi-Fi Network."
+        },
+        "password": {
+          "name": "Password",
+          "description": "New passphrase for the primary Wi-Fi Network."
+        },
+        "access_point_id": {
+          "name": "Radio identifier",
+          "description": "Optional identifier to update a single wireless band instead of all bands."
+        }
+      }
+    },
+    "set_additional_network": {
+      "name": "Set additional network",
+      "description": "Create or update an Additional Network on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "ssid": {
+          "name": "Additional network name",
+          "description": "Wireless name for the Additional Network."
+        },
+        "password": {
+          "name": "Password",
+          "description": "Passphrase for the Additional Network."
+        },
+        "broadcast": {
+          "name": "Broadcast name",
+          "description": "Whether the Additional Network name is visible to scanning Clients."
+        },
+        "create": {
+          "name": "Force create",
+          "description": "Create a new Additional Network instead of updating an existing one."
+        }
+      }
+    },
+    "delete_additional_network": {
+      "name": "Delete additional network",
+      "description": "Remove the Additional Network from a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        }
+      }
+    },
+    "rename_client": {
+      "name": "Rename client",
+      "description": "Update the display name of a Client on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router managing the Client."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Target Client MAC address, IPv4 address, ID, or name."
+        },
+        "new_name": {
+          "name": "New name",
+          "description": "New display name for the Client."
+        },
+        "icon_reference": {
+          "name": "Icon reference",
+          "description": "Optional Spectrum icon reference identifier."
+        }
+      }
+    },
+    "remove_client": {
+      "name": "Remove client",
+      "description": "Forget an inactive Client from a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router managing the Client."
+        },
+        "client": {
+          "name": "Client",
+          "description": "Target Client MAC address, IPv4 address, ID, or name."
+        }
+      }
+    },
+    "create_client_group": {
+      "name": "Create client group",
+      "description": "Create a named Client Group on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "name": {
+          "name": "Group name",
+          "description": "Display name for the new Client Group."
+        },
+        "clients": {
+          "name": "Clients",
+          "description": "Optional list of Client selectors to include in the Client Group."
+        }
+      }
+    },
+    "update_client_group": {
+      "name": "Update client group",
+      "description": "Rename a Client Group or replace its member Clients on a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "group": {
+          "name": "Client group",
+          "description": "Existing Client Group ID or name."
+        },
+        "name": {
+          "name": "New group name",
+          "description": "Updated name for the Client Group."
+        },
+        "clients": {
+          "name": "Clients",
+          "description": "List of Client selectors that belong to the Client Group."
+        }
+      }
+    },
+    "delete_client_group": {
+      "name": "Delete client group",
+      "description": "Delete a Client Group from a Router.",
+      "fields": {
+        "device_id": {
+          "name": "Router",
+          "description": "The Spectrum Router to configure."
+        },
+        "group": {
+          "name": "Client group",
+          "description": "Client Group ID or name to delete."
+        }
+      }
+    },
+    "run_speed_test": {
+      "name": "Run speed test",
+      "description": "Run a Spectrum speed test on a Router or Modem.",
+      "fields": {
+        "device_id": {
+          "name": "Router or Modem",
+          "description": "The Spectrum Router or Modem to test."
+        },
+        "operation": {
+          "name": "Operation",
+          "description": "Speed test mode (ROUTER, MODEM_DOWNLOAD, or MODEM_UPLOAD)."
+        },
+        "wait": {
+          "name": "Wait for result",
+          "description": "Wait until the speed test completes before returning."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "Spectrum authentication failed. Reauthenticate your Spectrum Account."
+    },
+    "connection_failed": {
+      "message": "Unable to connect to Spectrum services: {detail}"
+    },
+    "api_error": {
+      "message": "Spectrum returned an error: {error}"
+    },
+    "device_not_found": {
+      "message": "The selected Spectrum device could not be found."
+    },
+    "not_equipment_device": {
+      "message": "The selected device is not a Spectrum hardware unit."
+    },
+    "not_router_device": {
+      "message": "This action requires a Spectrum Router device."
+    },
+    "not_speed_test_device": {
+      "message": "Speed tests can only run on a Spectrum Router or Modem device."
+    },
+    "entry_not_loaded": {
+      "message": "The Spectrum Account entry for this device is not currently loaded."
+    },
+    "invalid_input": {
+      "message": "Invalid input: {detail}"
+    },
+    "external_port_immutable": {
+      "message": "Spectrum cannot change a Port Forward external port in place. Enable recreate to delete and recreate it."
+    }
+  }
+}
