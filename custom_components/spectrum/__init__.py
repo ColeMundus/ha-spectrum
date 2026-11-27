@@ -43,6 +43,7 @@ from .entity import (
     account_device_identifier,
     async_register_equipment_devices,
     equipment_device_identifier,
+    set_top_box_has_supported_entities,
 )
 from .services import async_register_services
 
@@ -58,8 +59,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SpectrumConfigEntry) -> bool:
-    async_register_services(hass)
-
     tokens = TokenSet(
         access_token=str(entry.data[CONF_ACCESS_TOKEN]),
         refresh_token=str(entry.data[CONF_REFRESH_TOKEN]),
@@ -195,7 +194,7 @@ async def async_remove_config_entry_device(
                     equipment_device_identifier(entry.entry_id, pod.id)
                 )
         for stb in eq.set_top_boxes:
-            if stb.id:
+            if stb.id and set_top_box_has_supported_entities(stb):
                 active_identifiers.add(
                     equipment_device_identifier(entry.entry_id, stb.id)
                 )

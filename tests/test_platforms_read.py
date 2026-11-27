@@ -1,12 +1,18 @@
 from __future__ import annotations
 
+import logging
 from datetime import UTC, date, datetime
 from unittest.mock import patch
 
 import pytest
 from aiospectrum import (
+    CellularBackup,
     Client,
     ModemHealth,
+    SecurityThreat,
+    SetTopBox,
+    SpeedTestResult,
+    ThreadNetworkConfig,
     WifiNetwork,
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -702,11 +708,61 @@ async def test_multi_router_scoping_in_read_platforms(hass: HomeAssistant) -> No
     assert hass.states.get(r2_pf.entity_id).state == "0"
 
 
+async def test_device_tracker_no_orphan_client_devices_and_zero_frame_warnings(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    with caplog.at_level(logging.WARNING, logger="homeassistant.helpers.frame"):
+        entry, _client, _ = await setup_integration(
+            hass,
+            options={OPT_CLIENT_TRACKER_MODE: CLIENT_TRACKER_MODE_ALL},
+        )
+
+    frame_warnings = [
+        record
+        for record in caplog.records
+        if record.name == "homeassistant.helpers.frame"
+        and record.levelno >= logging.WARNING
+    ]
+    assert frame_warnings == []
+
+    eid = entry.entry_id
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+
+    devices = dr.async_entries_for_config_entry(dev_reg, eid)
+    assert len(devices) == 5
+    for device in devices:
+        assert device.identifiers, f"Unexpected connection-only device: {device.name}"
+        device_entities = er.async_entries_for_device(
+            ent_reg, device.id, include_disabled_entities=True
+        )
+        assert device_entities, f"Unexpected empty 0-entity device: {device.name}"
+
+    router_device = dev_reg.async_get_device_by_identifier(
+        equipment_device_identifier(eid, "router-1"), eid
+    )
+    assert router_device is not None
+    tracker_comp = hass.data["entity_components"]["device_tracker"]
+    srv_reg = _entity_by_unique_id(
+        hass, Platform.DEVICE_TRACKER, f"{eid}:client_tracker:router-1:00005e005311"
+    )
+    assert srv_reg is not None
+    assert srv_reg.device_id == router_device.id
+    tracker_entity = tracker_comp.get_entity(srv_reg.entity_id)
+    assert tracker_entity is not None
+    assert tracker_entity.mac_address == "00:00:5E:00:53:11"
+    assert tracker_entity.ip_address == "192.0.2.101"
+    assert tracker_entity.hostname == "syn-server.local"
+
+
 async def test_read_platforms_edge_cases_and_missing_data(hass: HomeAssistant) -> None:
     from custom_components.spectrum.device_tracker import (
+        _client_device_info,
         _client_group_names,
         _client_key,
         _client_router_id,
+        _format_client_mac,
         _resolve_client_router,
     )
     from custom_components.spectrum.image import _primary_wifi_credentials
@@ -714,6 +770,14 @@ async def test_read_platforms_edge_cases_and_missing_data(hass: HomeAssistant) -
 
     assert _client_key(Client(id="cid-only", mac_address="")) == "cid-only"
     assert _client_key(Client(id=None, mac_address="")) is None
+    assert _format_client_mac(Client(mac_address="not-a-mac")) == "not-a-mac"
+    assert _format_client_mac(Client(mac_address="")) is None
+    assert _client_device_info("entry-x", "account", None)["identifiers"] == {
+        (DOMAIN, "entry-x:account")
+    }
+    assert _client_device_info("entry-x", "orphan-rtr", None)["identifiers"] == {
+        (DOMAIN, "entry-x:equipment:orphan-rtr")
+    }
 
     r1 = make_router(router_id="r1", network_id="n1")
     r2 = make_router(router_id="r2", network_id="n2")
@@ -797,3 +861,254 @@ async def test_read_platforms_edge_cases_and_missing_data(hass: HomeAssistant) -
     )
     assert tracker_reg is not None
     assert hass.states.get(tracker_reg.entity_id).state == "unavailable"
+
+
+async def test_live_router_omits_unsupported_thread_lan_signal_and_cleans_sentinel(
+    hass: HomeAssistant,
+) -> None:
+    router = make_router(router_id="router-live", with_subsystems=False)
+    router.feature_support = {
+        "threadNetwork": "NOT_SUPPORTED",
+        "cellularNetworkBackup": "SUPPORTED",
+        "updateUpnpConfiguration": "SUPPORTED",
+        "updateDnsConfiguration": "SUPPORTED",
+    }
+    router.thread_network = ThreadNetworkConfig()
+    router.thread_enabled = None
+    router.thread_radio_state = None
+    router.lan_ipv4 = None
+    router.cellular_backup = CellularBackup(
+        activation_status="ACTIVE",
+        is_ready=True,
+        is_in_use=False,
+        signal_strength=None,
+        data_usage_current=0.0,
+        data_usage_limit=10.0,
+        data_usage_unit="GB",
+        failover_status="UNKNOWN_BECAUSE_NOT_IMPLEMENTED",
+    )
+    eq = make_equipment_state(
+        with_subsystems=False,
+        include_pod=False,
+        include_stb=False,
+        include_modem_health=False,
+        include_speed_test=False,
+    )
+    eq.routers = [router]
+    net = make_network_state(
+        router_id="router-live",
+        with_threats=False,
+        with_coverage=False,
+        with_shield=False,
+    )
+    client = make_mock_client(equipment_state=eq, network_state=net)
+    entry, _, _ = await setup_integration(hass, mock_client=client)
+    eid = entry.entry_id
+
+    assert (
+        _entity_by_unique_id(hass, Platform.SWITCH, f"{eid}:thread_radio:router-live")
+        is None
+    )
+    assert (
+        _entity_by_unique_id(
+            hass, Platform.SENSOR, f"{eid}:router:router-live:thread_channel"
+        )
+        is None
+    )
+    assert (
+        _entity_by_unique_id(
+            hass, Platform.SENSOR, f"{eid}:router:router-live:lan_ipv4"
+        )
+        is None
+    )
+    assert (
+        _entity_by_unique_id(
+            hass, Platform.SENSOR, f"{eid}:router:router-live:cellular_backup_signal"
+        )
+        is None
+    )
+
+    cb_status_reg = _entity_by_unique_id(
+        hass, Platform.SENSOR, f"{eid}:router:router-live:cellular_backup_status"
+    )
+    assert cb_status_reg is not None
+    cb_status_state = hass.states.get(cb_status_reg.entity_id)
+    assert cb_status_state is not None
+    assert cb_status_state.state == "ACTIVE"
+
+    router.lan_ipv4 = "192.0.2.1"
+    router.cellular_backup.signal_strength = 3
+    await entry.runtime_data.equipment.async_refresh()
+    await hass.async_block_till_done()
+
+    lan_reg = _entity_by_unique_id(
+        hass, Platform.SENSOR, f"{eid}:router:router-live:lan_ipv4"
+    )
+    sig_reg = _entity_by_unique_id(
+        hass, Platform.SENSOR, f"{eid}:router:router-live:cellular_backup_signal"
+    )
+    assert lan_reg is not None
+    assert sig_reg is not None
+    assert hass.states.get(lan_reg.entity_id).state == "192.0.2.1"
+    assert hass.states.get(sig_reg.entity_id).state == "3"
+
+
+async def test_unsupported_set_top_box_creates_no_entity_or_device(
+    hass: HomeAssistant,
+) -> None:
+    unsupported_stb = SetTopBox(
+        id="stb-unsup",
+        nickname="Xumo Stream Box",
+        model="ESST11AEI",
+        equipment_type="STB",
+        manufacturer="Xumo",
+        mac_address="00:00:5E:00:53:44",
+        connection_state=None,
+        is_online=None,
+        feature_support={"connectionState": "NOT_SUPPORTED"},
+    )
+    eq = make_equipment_state(include_pod=False, include_stb=False)
+    eq.set_top_boxes = [unsupported_stb]
+    client = make_mock_client(equipment_state=eq)
+    entry, _, _ = await setup_integration(hass, mock_client=client)
+    eid = entry.entry_id
+
+    assert (
+        _entity_by_unique_id(
+            hass, Platform.BINARY_SENSOR, f"{eid}:stb:stb-unsup:connectivity"
+        )
+        is None
+    )
+    dev_reg = dr.async_get(hass)
+    assert (
+        dev_reg.async_get_device_by_identifier(
+            equipment_device_identifier(eid, "stb-unsup"), eid
+        )
+        is None
+    )
+
+
+async def test_security_shield_threats_active_only_counts_unended_threats(
+    hass: HomeAssistant,
+) -> None:
+    eq = make_equipment_state(include_pod=False, include_stb=False)
+    net = make_network_state(router_id="router-1", with_threats=False)
+    historical_threats = [
+        SecurityThreat(
+            threat_id="threat-hist-1",
+            action="BLOCKED",
+            client_id="client-1",
+            started_at="2026-11-26T12:00:00Z",
+            ended_at="2026-11-26T12:05:00Z",
+        ),
+        SecurityThreat(
+            threat_id="threat-hist-2",
+            action="BLOCKED",
+            client_id="client-1",
+            started_at="2026-11-26T13:00:00Z",
+            ended_at="2026-11-26T13:05:00Z",
+        ),
+    ]
+    net.threats = list(historical_threats)
+    for shield in net.security_shields.values():
+        shield.threats = list(historical_threats)
+
+    client = make_mock_client(equipment_state=eq, network_state=net)
+    entry, _, _ = await setup_integration(hass, mock_client=client)
+    eid = entry.entry_id
+
+    threat_reg = _entity_by_unique_id(
+        hass,
+        Platform.BINARY_SENSOR,
+        f"{eid}:router:router-1:security_shield_threats_active",
+    )
+    assert threat_reg is not None
+    state = hass.states.get(threat_reg.entity_id)
+    assert state is not None
+    assert state.state == "off"
+    assert state.attributes["active_threats"] == 0
+    assert state.attributes["total_threats"] == 2
+
+    active_threat = SecurityThreat(
+        threat_id="threat-live-1",
+        action="BLOCKED",
+        client_id="client-1",
+        started_at="2026-11-26T14:00:00Z",
+        ended_at=None,
+    )
+    for shield in net.security_shields.values():
+        shield.threats.append(active_threat)
+    net.threats.append(active_threat)
+    await entry.runtime_data.network.async_refresh()
+    await hass.async_block_till_done()
+
+    state_active = hass.states.get(threat_reg.entity_id)
+    assert state_active is not None
+    assert state_active.state == "on"
+    assert state_active.attributes["active_threats"] == 1
+    assert state_active.attributes["total_threats"] == 3
+
+
+async def test_speed_test_sensors_create_only_populated_metrics_and_add_dynamically(
+    hass: HomeAssistant,
+) -> None:
+    eq = make_equipment_state(
+        include_pod=False, include_stb=False, include_speed_test=False
+    )
+    partial_speed_test = SpeedTestResult(
+        id="st-partial-1",
+        status="COMPLETED",
+        download_mbps=910.0,
+        upload_mbps=36.5,
+        latency_ms=None,
+        jitter_ms=None,
+        packet_loss_pct=None,
+        timestamp="2026-11-26T15:30:00Z",
+        equipment_id="router-1",
+    )
+    eq.speed_test_history = [partial_speed_test]
+    client = make_mock_client(equipment_state=eq)
+    entry, _, _ = await setup_integration(hass, mock_client=client)
+    eid = entry.entry_id
+
+    for present_key in (
+        "speed_test_download",
+        "speed_test_upload",
+        "speed_test_last_run",
+        "speed_test_status",
+    ):
+        assert (
+            _entity_by_unique_id(
+                hass, Platform.SENSOR, f"{eid}:router:router-1:{present_key}"
+            )
+            is not None
+        )
+
+    for omitted_key in (
+        "speed_test_latency",
+        "speed_test_jitter",
+        "speed_test_packet_loss",
+    ):
+        assert (
+            _entity_by_unique_id(
+                hass, Platform.SENSOR, f"{eid}:router:router-1:{omitted_key}"
+            )
+            is None
+        )
+
+    partial_speed_test.latency_ms = 12.5
+    partial_speed_test.jitter_ms = 1.2
+    partial_speed_test.packet_loss_pct = 0.1
+    await entry.runtime_data.equipment.async_refresh()
+    await hass.async_block_till_done()
+
+    for key, expected in (
+        ("speed_test_latency", "12.5"),
+        ("speed_test_jitter", "1.2"),
+        ("speed_test_packet_loss", "0.1"),
+    ):
+        reg = _entity_by_unique_id(
+            hass, Platform.SENSOR, f"{eid}:router:router-1:{key}"
+        )
+        assert reg is not None
+        assert hass.states.get(reg.entity_id).state == expected

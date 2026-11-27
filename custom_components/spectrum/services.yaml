@@ -127,7 +127,7 @@ delete_port_forward:
           max: 65535
           mode: box
 
-list_port_forwards:
+get_port_forwards:
   fields:
     device_id:
       required: true

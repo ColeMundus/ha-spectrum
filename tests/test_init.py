@@ -173,6 +173,26 @@ async def test_remove_config_entry_device_active_vs_stale(hass: HomeAssistant) -
     )
     assert await async_remove_config_entry_device(hass, entry, stale_device) is True
 
+    from aiospectrum import SetTopBox
+
+    unsupported_stb = SetTopBox(
+        id="stb-unsupported",
+        model="ESST11AEI",
+        connection_state=None,
+        is_online=None,
+        feature_support={"connectionState": "NOT_SUPPORTED"},
+    )
+    entry.runtime_data.equipment.data.equipment.set_top_boxes.append(unsupported_stb)
+    previously_registered_stb = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={equipment_device_identifier(entry.entry_id, "stb-unsupported")},
+        name="Previously Registered Unsupported STB",
+    )
+    assert (
+        await async_remove_config_entry_device(hass, entry, previously_registered_stb)
+        is True
+    )
+
 
 def test_identifier_parsers() -> None:
     assert parse_account_identifier((DOMAIN, "entry-1:account")) == "entry-1"

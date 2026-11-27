@@ -94,6 +94,10 @@ def find_pod_router_id(equipment: EquipmentState, pod: Pod) -> str | None:
     return None
 
 
+def set_top_box_has_supported_entities(stb: SetTopBox) -> bool:
+    return stb.supports("CONNECTION_STATE") or stb.is_online is not None
+
+
 def account_device_info(entry_id: str) -> DeviceInfo:
     return DeviceInfo(
         identifiers={account_device_identifier(entry_id)},
@@ -276,6 +280,8 @@ def async_register_equipment_devices(
         )
 
     for stb in equipment.set_top_boxes:
+        if not set_top_box_has_supported_entities(stb):
+            continue
         registry.async_get_or_create(
             config_entry_id=entry_id,
             **set_top_box_device_info(

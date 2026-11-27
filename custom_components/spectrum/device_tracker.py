@@ -12,21 +12,17 @@ from aiospectrum import (
     normalize_mac,
 )
 from homeassistant.components.device_tracker.const import SourceType
-from homeassistant.components.device_tracker.entity import (
-    BaseScannerEntity,
-    ScannerEntity,
-)
+from homeassistant.components.device_tracker.entity import BaseScannerEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CLIENT_TRACKER_MODE_ALL,
     CLIENT_TRACKER_MODE_CONNECTED_OR_RESERVED,
     CLIENT_TRACKER_MODE_DISABLED,
-    DOMAIN,
     OPT_CLIENT_TRACKER_MODE,
 )
 from .coordinator import (
@@ -36,10 +32,14 @@ from .coordinator import (
 )
 from .entity import (
     SpectrumCoordinatorEntity,
-    account_device_identifier,
+    account_device_info,
     async_register_equipment_devices,
     equipment_device_identifier,
+    find_combo_modem,
+    router_device_info,
 )
+
+PARALLEL_UPDATES = 0
 
 
 def _client_key(client: Client) -> str | None:
@@ -81,6 +81,21 @@ def _client_router_id(
     return "account"
 
 
+def _client_device_info(
+    entry_id: str,
+    router_id: str,
+    equipment: EquipmentState | None,
+) -> DeviceInfo:
+    if router_id == "account":
+        return account_device_info(entry_id)
+    if equipment is not None:
+        for router in equipment.routers:
+            if router.id == router_id:
+                combo_modem = find_combo_modem(equipment, router)
+                return router_device_info(entry_id, router, combo_modem)
+    return DeviceInfo(identifiers={equipment_device_identifier(entry_id, router_id)})
+
+
 def _tracker_unique_id(entry_id: str, router_id: str, client_mac_key: str) -> str:
     return f"{entry_id}:client_tracker:{router_id}:{client_mac_key}"
 
@@ -91,6 +106,12 @@ def _tracker_enabled_default(mode: str, client: Client) -> bool:
     if mode == CLIENT_TRACKER_MODE_DISABLED:
         return False
     return client.connected is True or client.ip_reservation is not None
+
+
+def _format_client_mac(client: Client) -> str | None:
+    if client.mac_address and is_mac_like(client.mac_address):
+        return format_mac(client.mac_address)
+    return client.mac_address or None
 
 
 def _client_group_names(client: Client, network: NetworkState | None) -> list[str]:
@@ -120,7 +141,7 @@ def _client_group_names(client: Client, network: NetworkState | None) -> list[st
 
 
 class SpectrumClientTracker(
-    SpectrumCoordinatorEntity[SpectrumNetworkCoordinator], ScannerEntity
+    SpectrumCoordinatorEntity[SpectrumNetworkCoordinator], BaseScannerEntity
 ):
     _attr_translation_key = "client"
     _attr_source_type = SourceType.ROUTER
@@ -134,16 +155,20 @@ class SpectrumClientTracker(
         client_mac_key: str,
         client: Client,
         enabled_default: bool,
+        device_info: DeviceInfo,
     ) -> None:
         super().__init__(network_coordinator)
         self._equipment_coordinator = equipment_coordinator
-        self._entry_id = entry_id
         self._router_id = router_id
         self._client_mac_key = client_mac_key
-        self._unique_id = _tracker_unique_id(entry_id, router_id, client_mac_key)
-        self._enabled_default = enabled_default
+        self._attr_unique_id = _tracker_unique_id(entry_id, router_id, client_mac_key)
+        self._attr_entity_registry_enabled_default = enabled_default
+        self._device_info = device_info
         self._attr_translation_placeholders = {"client_name": client.label}
-        self._sync_cached_attrs(client)
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        return self._device_info
 
     def _current_client(self) -> Client | None:
         if self.coordinator.data is None:
@@ -160,27 +185,6 @@ class SpectrumClientTracker(
                 return client
         return None
 
-    def _sync_cached_attrs(self, client: Client | None) -> None:
-        if client is None:
-            return
-        self._attr_mac_address = (
-            format_mac(client.mac_address)
-            if client.mac_address and is_mac_like(client.mac_address)
-            else (client.mac_address or None)
-        )
-        self._attr_ip_address = client.primary_ipv4
-        self._attr_hostname = client.host_name
-        if client.label:
-            self._attr_translation_placeholders = {"client_name": client.label}
-
-    @property
-    def unique_id(self) -> str:
-        return self._unique_id
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        return self._enabled_default
-
     @property
     def available(self) -> bool:
         return super().available and self._current_client() is not None
@@ -191,11 +195,33 @@ class SpectrumClientTracker(
         return bool(client is not None and client.connected is True)
 
     @property
+    def mac_address(self) -> str | None:
+        client = self._current_client()
+        return _format_client_mac(client) if client is not None else None
+
+    @property
+    def ip_address(self) -> str | None:
+        client = self._current_client()
+        return client.primary_ipv4 if client is not None else None
+
+    @property
+    def hostname(self) -> str | None:
+        client = self._current_client()
+        return client.host_name if client is not None else None
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         client = self._current_client()
         if client is None:
             return {}
+        formatted_mac = _format_client_mac(client)
+        ip_address = client.primary_ipv4
         return {
+            "ip": ip_address,
+            "mac": formatted_mac,
+            "ip_address": ip_address,
+            "mac_address": formatted_mac,
+            "host_name": client.host_name,
             "connection_type": client.connection_type,
             "ssid": client.ssid,
             "wifi_radio_frequency": client.wifi_radio_frequency,
@@ -209,63 +235,11 @@ class SpectrumClientTracker(
             ),
         }
 
-    def _parent_device_entry(self) -> dr.DeviceEntry | None:
-        if self.hass is None:
-            return None
-        dev_reg = dr.async_get(self.hass)
-        if self._router_id != "account":
-            device = dev_reg.async_get_device_by_identifier(
-                equipment_device_identifier(self._entry_id, self._router_id),
-                self._entry_id,
-            )
-            if device is not None:
-                return device
-        return dev_reg.async_get_device_by_identifier(
-            account_device_identifier(self._entry_id),
-            self._entry_id,
-        )
-
-    @callback
-    def _async_link_parent_device(self) -> None:
-        if self.hass is None:
-            return
-        parent_device = self._parent_device_entry()
-        if parent_device is None:
-            return
-        ent_reg = er.async_get(self.hass)
-        entity_id = (
-            self.registry_entry.entity_id
-            if self.registry_entry is not None
-            else ent_reg.async_get_entity_id(
-                Platform.DEVICE_TRACKER, DOMAIN, self._unique_id
-            )
-        )
-        if entity_id is None:
-            return
-        reg_entry = ent_reg.async_get(entity_id)
-        if reg_entry is None:
-            return
-        if reg_entry.device_id != parent_device.id:
-            updated = ent_reg.async_update_entity(
-                entity_id,
-                device_id=parent_device.id,
-            )
-            if self.registry_entry is not None:
-                self.registry_entry = updated
-        self.device_entry = parent_device
-
-    async def async_internal_added_to_hass(self) -> None:
-        self._async_link_parent_device()
-        await BaseScannerEntity.async_internal_added_to_hass(self)
-
-    @callback
-    def add_to_platform_abort(self) -> None:
-        self._async_link_parent_device()
-        super().add_to_platform_abort()
-
     @callback
     def _handle_coordinator_update(self) -> None:
-        self._sync_cached_attrs(self._current_client())
+        client = self._current_client()
+        if client is not None and client.label:
+            self._attr_translation_placeholders = {"client_name": client.label}
         super()._handle_coordinator_update()
 
 
@@ -336,6 +310,7 @@ async def async_setup_entry(
                     mac_key,
                     client,
                     _tracker_enabled_default(tracker_mode, client),
+                    _client_device_info(entry_id, router_id, equipment),
                 )
             )
 

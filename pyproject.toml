@@ -8,16 +8,24 @@ dependencies = []
 [dependency-groups]
 dev = [
   "aiospectrum==0.1.0",
-  "homeassistant==2026.10.0",
   "mypy==2.4.1",
   "pytest-cov==7.1.0",
-  "pytest-homeassistant-custom-component==0.13.371",
   "ruff==0.17.3",
   "segno==1.6.6",
+]
+minimum = [
+  "homeassistant==2026.10.0",
+  "pytest-homeassistant-custom-component==0.13.371",
+]
+latest = [
+  "homeassistant==2026.11.0",
+  "pytest-homeassistant==2026.11.0",
 ]
 
 [tool.uv]
 package = false
+default-groups = ["dev", "minimum"]
+conflicts = [[{ group = "minimum" }, { group = "latest" }]]
 
 [tool.uv.sources]
 aiospectrum = { path = "../aiospectrum", editable = true }

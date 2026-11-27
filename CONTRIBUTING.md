@@ -4,21 +4,38 @@ Thank you for contributing to **Spectrum for Home Assistant**.
 
 ## Local setup
 
-Use `uv` and Python 3.14.7. For local development, `pyproject.toml` points `aiospectrum` to the sibling checkout `../aiospectrum` via `[tool.uv.sources]`. CI installs the published PyPI release with `uv sync --no-sources`.
+Use `uv` and Python 3.14.7. The lock pins two mutually exclusive Home Assistant compatibility lanes:
+
+- `minimum` (default): Core `2026.10.0` with `pytest-homeassistant-custom-component==0.13.371`
+- `latest`: Core `2026.11.0` with `pytest-homeassistant==2026.11.0`
+
+For local development, `pyproject.toml` points `aiospectrum` to the sibling checkout `../aiospectrum` via `[tool.uv.sources]`. CI installs the published PyPI release with `uv sync --no-sources`.
 
 ```sh
-uv sync
+uv sync --locked
 uv pip check
-uv run ruff check .
-uv run ruff format --check .
-uv run mypy
-uv run pytest --cov=custom_components/spectrum --cov-report=term-missing --cov-fail-under=95
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked mypy
+uv run --locked pytest --cov=custom_components/spectrum --cov-report=term-missing --cov-fail-under=95
+```
+
+To run the `latest` lane in a separate virtual environment:
+
+```sh
+export UV_PROJECT_ENVIRONMENT="$PWD/.venv-latest"
+uv sync --locked --no-default-groups --group dev --group latest
+uv pip check
+uv run --no-sync ruff check .
+uv run --no-sync ruff format --check .
+uv run --no-sync mypy
+uv run --no-sync pytest --cov=custom_components/spectrum --cov-report=term-missing --cov-fail-under=95
 ```
 
 To test against the published `aiospectrum` package from PyPI instead of a local sibling checkout:
 
 ```sh
-uv sync --no-sources
+uv sync --no-sources --no-default-groups --group dev --group minimum
 ```
 
 ## Standards
@@ -34,5 +51,5 @@ uv sync --no-sources
 
 1. Ensure the matching `aiospectrum` version is published on PyPI before tagging `ha-spectrum`.
 2. Keep `pyproject.toml` and `custom_components/spectrum/manifest.json` versions identical.
-3. Verify `ci.yml` passes cleanly on the release commit, including `ruff`, `mypy`, `pytest` (>= 95% coverage), `hassfest`, and `hacs/action` without ignored checks.
+3. Verify `ci.yml` passes cleanly on the release commit across both `minimum` and `latest` lanes, including `ruff`, `mypy`, `pytest` (>= 95% coverage), `hassfest`, and `hacs/action` without ignored checks.
 4. Tag `vX.Y.Z` and publish a GitHub Release; `.github/workflows/release.yml` validates the tag and attaches a manual-install ZIP and SHA-256 checksum.

@@ -504,15 +504,39 @@ async def test_select_pod_led_mode_state_errors_and_dynamic_discovery(
 
 
 async def test_switches_edge_cases_and_fallbacks(hass: HomeAssistant) -> None:
+    from aiospectrum import SecurityShield, ThreadNetworkConfig, UpnpConfig
+
     from custom_components.spectrum.switch import (
         _resolve_client_router_id,
         _resolve_group_router_id,
         _resolve_router_network_id,
         _router_device_info_for_id,
         _supports_hotspot,
+        _supports_security_shield,
+        _supports_thread_radio,
+        _supports_upnp,
     )
 
     from .conftest import make_router
+
+    r_unsup = make_router(router_id="r-unsup", with_subsystems=False)
+    r_unsup.feature_support = {
+        "threadNetwork": "NOT_SUPPORTED",
+        "updateUpnpConfiguration": "NOT_SUPPORTED",
+    }
+    r_unsup.thread_network = ThreadNetworkConfig()
+    r_unsup.upnp = UpnpConfig(enabled=None)
+    r_unsup.hotspot_status = "UNKNOWN_BECAUSE_NOT_IMPLEMENTED"
+    r_unsup.hotspot_enabled = True
+    r_unsup.security_shield = SecurityShield(
+        enabled=None,
+        status="UNKNOWN_BECAUSE_NOT_IMPLEMENTED",
+        network_id=SYNTHETIC_NETWORK_ID,
+    )
+    assert _supports_thread_radio(r_unsup) is False
+    assert _supports_upnp(r_unsup) is False
+    assert _supports_hotspot(r_unsup, None, None) is False
+    assert _supports_security_shield(r_unsup, None, None) is False
 
     eq = make_equipment_state(include_pod=False, include_stb=False)
     net = make_network_state(router_id="router-1")

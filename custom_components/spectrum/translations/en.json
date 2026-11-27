@@ -474,8 +474,8 @@
         }
       }
     },
-    "list_port_forwards": {
-      "name": "List port forwards",
+    "get_port_forwards": {
+      "name": "Get port forwards",
       "description": "Return Port Forwards configured on a Router (optionally filtered to a single Client).",
       "fields": {
         "device_id": {

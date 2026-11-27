@@ -101,6 +101,31 @@ def _resolve_router_network_id(
     return None
 
 
+def _is_feature_explicitly_unsupported(router: Router, *keys: str) -> bool:
+    targets = {key.upper() for key in keys}
+    for key, value in router.feature_support.items():
+        if key.upper() in targets and value.strip().upper() in {
+            "NOT_SUPPORTED",
+            "FALSE",
+            "DISABLED",
+        }:
+            return True
+    return False
+
+
+def _is_unsupported_status(status: str | None) -> bool:
+    if status is None:
+        return False
+    upper = status.strip().upper()
+    return upper == "NOT_SUPPORTED" or upper.startswith("UNKNOWN_BECAUSE_")
+
+
+def _shield_is_supported(shield: SecurityShield | None) -> bool:
+    if shield is None or _is_unsupported_status(shield.status):
+        return False
+    return shield.enabled is not None
+
+
 def _supports_security_shield(
     router: Router,
     equipment: EquipmentState | None,
@@ -109,17 +134,21 @@ def _supports_security_shield(
     network_id = _resolve_router_network_id(router, equipment, network)
     if not network_id:
         return False
-    if router.security_shield is not None:
+    if _shield_is_supported(router.security_shield):
         return True
-    return network is not None and network_id in network.security_shields
+    if network is not None:
+        return _shield_is_supported(network.security_shields.get(network_id))
+    return False
 
 
 def _supports_upnp(router: Router) -> bool:
-    return (
-        router.supports("UPDATE_UPNP")
-        or router.supports("GET_UPNP")
-        or router.upnp is not None
-    )
+    if router.upnp is not None and router.upnp.enabled is not None:
+        return True
+    if _is_feature_explicitly_unsupported(
+        router, "updateUpnpConfiguration", "UPDATE_UPNP", "GET_UPNP"
+    ):
+        return False
+    return router.supports("UPDATE_UPNP") or router.supports("GET_UPNP")
 
 
 def _supports_hotspot(
@@ -129,13 +158,25 @@ def _supports_hotspot(
 ) -> bool:
     if _resolve_router_network_id(router, equipment, network) is None:
         return False
-    if router.hotspot_status is not None:
-        return router.hotspot_status.strip().upper() != "NOT_SUPPORTED"
+    if _is_unsupported_status(router.hotspot_status):
+        return False
     return router.hotspot_enabled is not None
 
 
 def _supports_thread_radio(router: Router) -> bool:
-    return router.supports("THREAD_NETWORK") or router.thread_network is not None
+    if _is_feature_explicitly_unsupported(router, "threadNetwork", "THREAD_NETWORK"):
+        return False
+    if router.thread_enabled is not None:
+        return True
+    if router.thread_network is not None and (
+        router.thread_network.enabled is not None
+        or (
+            router.thread_network.radio_state is not None
+            and not _is_unsupported_status(router.thread_network.radio_state)
+        )
+    ):
+        return True
+    return router.supports("THREAD_NETWORK")
 
 
 def _resolve_group_router_id(

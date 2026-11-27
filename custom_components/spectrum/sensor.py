@@ -60,6 +60,8 @@ from .entity import (
     router_device_info,
 )
 
+PARALLEL_UPDATES = 0
+
 _MAX_STATE_LENGTH = 255
 
 
@@ -464,6 +466,43 @@ def _cellular_usage_attrs(
     }
 
 
+def _clean_status_value(value: str | None) -> str | None:
+    if not value:
+        return None
+    if value.strip().upper().startswith("UNKNOWN_BECAUSE_"):
+        return None
+    return value
+
+
+def _cellular_backup_status(router: Router) -> str | None:
+    cb = router.cellular_backup
+    if cb is None:
+        return None
+    return _clean_status_value(cb.failover_status) or _clean_status_value(
+        cb.activation_status
+    )
+
+
+def _has_thread_channel(router: Router) -> bool:
+    tn = router.thread_network
+    if tn is None:
+        return False
+    if tn.channel is not None:
+        return True
+    has_data = any(
+        val is not None
+        for val in (
+            tn.radio_state,
+            tn.enabled,
+            tn.source,
+            tn.extended_pan_id,
+            tn.network_name,
+            tn.pan_id,
+        )
+    )
+    return router.supports("THREAD_NETWORK") and has_data
+
+
 def _cellular_status_attrs(
     _bundle: EquipmentBundle, router: Router
 ) -> dict[str, Any] | None:
@@ -471,7 +510,7 @@ def _cellular_status_attrs(
     if cb is None:
         return None
     return {
-        "activation_status": cb.activation_status,
+        "activation_status": _clean_status_value(cb.activation_status),
         "power_source_in_use": cb.power_source_in_use,
         "last_failover_start": cb.last_failover_start,
     }
@@ -822,12 +861,6 @@ ROUTER_CORE_EQUIPMENT_SENSORS: tuple[SpectrumRouterEquipmentSensorDescription, .
         value_fn=lambda _bundle, router: router.wan_ipv6,
     ),
     SpectrumRouterEquipmentSensorDescription(
-        key="lan_ipv4",
-        translation_key="lan_ipv4",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda _bundle, router: router.lan_ipv4,
-    ),
-    SpectrumRouterEquipmentSensorDescription(
         key="connection_state",
         translation_key="connection_state",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -848,6 +881,13 @@ ROUTER_CORE_EQUIPMENT_SENSORS: tuple[SpectrumRouterEquipmentSensorDescription, .
         entity_registry_enabled_default=False,
         value_fn=lambda _bundle, router: router.firmware_version,
     ),
+)
+
+ROUTER_LAN_IPV4_DESC = SpectrumRouterEquipmentSensorDescription(
+    key="lan_ipv4",
+    translation_key="lan_ipv4",
+    entity_category=EntityCategory.DIAGNOSTIC,
+    value_fn=lambda _bundle, router: router.lan_ipv4,
 )
 
 ROUTER_DNS_SENSORS: tuple[SpectrumRouterEquipmentSensorDescription, ...] = (
@@ -995,17 +1035,18 @@ ROUTER_SPEED_TEST_SENSORS: tuple[SpectrumRouterEquipmentSensorDescription, ...] 
     ),
 )
 
-ROUTER_CELLULAR_BACKUP_SENSORS: tuple[SpectrumRouterEquipmentSensorDescription, ...] = (
-    SpectrumRouterEquipmentSensorDescription(
-        key="cellular_backup_signal",
-        translation_key="cellular_backup_signal",
-        state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda _bundle, router: (
-            router.cellular_backup.signal_strength
-            if router.cellular_backup is not None
-            else None
-        ),
+ROUTER_CELLULAR_BACKUP_SIGNAL_DESC = SpectrumRouterEquipmentSensorDescription(
+    key="cellular_backup_signal",
+    translation_key="cellular_backup_signal",
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda _bundle, router: (
+        router.cellular_backup.signal_strength
+        if router.cellular_backup is not None
+        else None
     ),
+)
+
+ROUTER_CELLULAR_BACKUP_SENSORS: tuple[SpectrumRouterEquipmentSensorDescription, ...] = (
     SpectrumRouterEquipmentSensorDescription(
         key="cellular_backup_usage",
         translation_key="cellular_backup_usage",
@@ -1026,14 +1067,7 @@ ROUTER_CELLULAR_BACKUP_SENSORS: tuple[SpectrumRouterEquipmentSensorDescription, 
         key="cellular_backup_status",
         translation_key="cellular_backup_status",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda _bundle, router: (
-            (
-                router.cellular_backup.failover_status
-                or router.cellular_backup.activation_status
-            )
-            if router.cellular_backup is not None
-            else None
-        ),
+        value_fn=lambda _bundle, router: _cellular_backup_status(router),
         attrs_fn=_cellular_status_attrs,
     ),
 )
@@ -1489,6 +1523,17 @@ async def async_setup_entry(
                     )
                 )
 
+            if router.lan_ipv4 is not None:
+                _append(
+                    SpectrumRouterEquipmentSensor(
+                        equipment_coordinator,
+                        entry_id,
+                        router,
+                        combo_modem,
+                        ROUTER_LAN_IPV4_DESC,
+                    )
+                )
+
             if (
                 router.dns is not None
                 or router.supports("GET_DNS")
@@ -1549,22 +1594,30 @@ async def async_setup_entry(
                         )
                     )
 
-            if (
-                router.supports("SPEED_TEST")
-                or _latest_speed_test_for_router(bundle, router) is not None
-            ):
+            if _latest_speed_test_for_router(bundle, router) is not None:
                 for speed_desc in ROUTER_SPEED_TEST_SENSORS:
+                    if speed_desc.value_fn(bundle, router) is not None:
+                        _append(
+                            SpectrumRouterEquipmentSensor(
+                                equipment_coordinator,
+                                entry_id,
+                                router,
+                                combo_modem,
+                                speed_desc,
+                            )
+                        )
+
+            if router.cellular_backup is not None:
+                if router.cellular_backup.signal_strength is not None:
                     _append(
                         SpectrumRouterEquipmentSensor(
                             equipment_coordinator,
                             entry_id,
                             router,
                             combo_modem,
-                            speed_desc,
+                            ROUTER_CELLULAR_BACKUP_SIGNAL_DESC,
                         )
                     )
-
-            if router.cellular_backup is not None:
                 for cb_desc in ROUTER_CELLULAR_BACKUP_SENSORS:
                     _append(
                         SpectrumRouterEquipmentSensor(
@@ -1576,7 +1629,7 @@ async def async_setup_entry(
                         )
                     )
 
-            if router.thread_network is not None:
+            if _has_thread_channel(router):
                 _append(
                     SpectrumRouterEquipmentSensor(
                         equipment_coordinator,

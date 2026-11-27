@@ -39,7 +39,7 @@ from .entity import parse_equipment_identifier
 SERVICE_ADD_PORT_FORWARD = "add_port_forward"
 SERVICE_UPDATE_PORT_FORWARD = "update_port_forward"
 SERVICE_DELETE_PORT_FORWARD = "delete_port_forward"
-SERVICE_LIST_PORT_FORWARDS = "list_port_forwards"
+SERVICE_GET_PORT_FORWARDS = "get_port_forwards"
 SERVICE_SET_IP_RESERVATION = "set_ip_reservation"
 SERVICE_DELETE_IP_RESERVATION = "delete_ip_reservation"
 SERVICE_SET_ACCESS_SCHEDULE = "set_access_schedule"
@@ -134,7 +134,7 @@ DELETE_PORT_FORWARD_SCHEMA = vol.Schema(
     }
 )
 
-LIST_PORT_FORWARDS_SCHEMA = vol.Schema(
+GET_PORT_FORWARDS_SCHEMA = vol.Schema(
     {
         **_BASE_TARGET_SCHEMA,
         vol.Optional(ATTR_CLIENT): cv.string,
@@ -521,7 +521,7 @@ def async_register_services(hass: HomeAssistant) -> None:
 
         await _run_service_action(hass, entry, _action)
 
-    async def _handle_list_port_forwards(call: ServiceCall) -> ServiceResponse:
+    async def _handle_get_port_forwards(call: ServiceCall) -> ServiceResponse:
         entry, router = _resolve_router_target(hass, call.data[ATTR_DEVICE_ID])
         runtime = entry.runtime_data
 
@@ -818,9 +818,9 @@ def async_register_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN,
-        SERVICE_LIST_PORT_FORWARDS,
-        _handle_list_port_forwards,
-        schema=LIST_PORT_FORWARDS_SCHEMA,
+        SERVICE_GET_PORT_FORWARDS,
+        _handle_get_port_forwards,
+        schema=GET_PORT_FORWARDS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(

@@ -44,7 +44,11 @@ from aiospectrum import (
     derive_account_unique_id,
 )
 from homeassistant.core import HomeAssistant
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+try:
+    from pytest_homeassistant.common import MockConfigEntry
+except ModuleNotFoundError:
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 import custom_components
 from custom_components.spectrum.const import (

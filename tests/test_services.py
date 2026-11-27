@@ -59,7 +59,7 @@ from custom_components.spectrum.services import (
     SERVICE_DELETE_CLIENT_GROUP,
     SERVICE_DELETE_IP_RESERVATION,
     SERVICE_DELETE_PORT_FORWARD,
-    SERVICE_LIST_PORT_FORWARDS,
+    SERVICE_GET_PORT_FORWARDS,
     SERVICE_REMOVE_CLIENT,
     SERVICE_RENAME_CLIENT,
     SERVICE_RUN_SPEED_TEST,
@@ -78,7 +78,7 @@ ALL_17_SERVICES = (
     SERVICE_ADD_PORT_FORWARD,
     SERVICE_UPDATE_PORT_FORWARD,
     SERVICE_DELETE_PORT_FORWARD,
-    SERVICE_LIST_PORT_FORWARDS,
+    SERVICE_GET_PORT_FORWARDS,
     SERVICE_SET_IP_RESERVATION,
     SERVICE_DELETE_IP_RESERVATION,
     SERVICE_SET_ACCESS_SCHEDULE,
@@ -213,7 +213,7 @@ async def test_port_forward_and_ip_reservation_services(hass: HomeAssistant) -> 
 
         listed_all = await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_PORT_FORWARDS,
+            SERVICE_GET_PORT_FORWARDS,
             {ATTR_DEVICE_ID: router_dev},
             blocking=True,
             return_response=True,
@@ -223,7 +223,7 @@ async def test_port_forward_and_ip_reservation_services(hass: HomeAssistant) -> 
 
         listed_filtered = await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_PORT_FORWARDS,
+            SERVICE_GET_PORT_FORWARDS,
             {ATTR_DEVICE_ID: router_dev, ATTR_CLIENT: "Synthetic Server"},
             blocking=True,
             return_response=True,
@@ -238,7 +238,7 @@ async def test_port_forward_and_ip_reservation_services(hass: HomeAssistant) -> 
         entry.runtime_data.network.data = None
         listed_empty = await hass.services.async_call(
             DOMAIN,
-            SERVICE_LIST_PORT_FORWARDS,
+            SERVICE_GET_PORT_FORWARDS,
             {ATTR_DEVICE_ID: router_dev},
             blocking=True,
             return_response=True,

@@ -4,26 +4,27 @@
 
 Monitor and manage your Spectrum residential **Account**, **Networks**, **Routers**, **Modems**, **Pods**, **Set-Top Boxes**, **Clients**, **Outages**, **Service Appointments**, and **Billing Summary** in Home Assistant.
 
-Independent and unofficial integration; not affiliated with or endorsed by Charter Communications or Spectrum. Bundled geometric brand artwork is original and MIT-licensed.
+Independent and unofficial integration; not affiliated with or endorsed by Charter Communications or Spectrum.
 
 ## Installation
 
 Requires **Home Assistant Core 2026.10.0 or later**.
 
-### HACS (recommended)
+### Home Assistant Marketplace (recommended)
 
-1. Open **HACS** in Home Assistant (or use [Open in HACS](https://my.home-assistant.io/redirect/hacs_repository/?owner=ColeMundus&repository=ha-spectrum&category=integration)).
-2. Search for **Spectrum** in the HACS default store.
-3. Download **Spectrum** and restart Home Assistant.
+1. Open **Settings → Marketplace** in Home Assistant (2026.11 or later).
+2. Search for **Spectrum** and select **Install**.
+3. Restart Home Assistant.
 4. Go to **Settings → Devices & services → Add integration → Spectrum**.
 
-### HACS custom repository
+### Add from link / legacy HACS
 
-If **Spectrum** does not appear in your HACS catalog search:
+If **Spectrum** does not appear in Marketplace search:
 
-1. Open **HACS → Custom repositories**.
-2. Add `https://github.com/ColeMundus/ha-spectrum` with category **Integration**.
-3. Download **Spectrum** and restart Home Assistant.
+1. Open **Settings → Marketplace → Add from link** and enter `https://github.com/ColeMundus/ha-spectrum`.
+2. Select **Install** and restart Home Assistant.
+
+On Home Assistant `2026.10` with legacy HACS, search for **Spectrum** in HACS (or add `https://github.com/ColeMundus/ha-spectrum` under **HACS → Custom repositories** with category **Integration**), download it, and restart Home Assistant.
 
 ### Manual installation
 
@@ -67,7 +68,7 @@ The integration registers 17 actions under the `spectrum` domain:
 
 | Category | Actions |
 | --- | --- |
-| **Port Forwards** | `spectrum.add_port_forward`, `spectrum.update_port_forward`, `spectrum.delete_port_forward`, `spectrum.list_port_forwards` (returns response data) |
+| **Port Forwards** | `spectrum.add_port_forward`, `spectrum.update_port_forward`, `spectrum.delete_port_forward`, `spectrum.get_port_forwards` (returns response data) |
 | **IP Reservations** | `spectrum.set_ip_reservation`, `spectrum.delete_ip_reservation` |
 | **Access Schedules** | `spectrum.set_access_schedule` |
 | **DNS & Wi-Fi Networks** | `spectrum.set_dns`, `spectrum.update_wifi`, `spectrum.set_additional_network`, `spectrum.delete_additional_network` |
@@ -86,7 +87,6 @@ Open the integration's **Configure** menu to adjust:
 ## Privacy and diagnostics
 
 - Download diagnostics from **Settings → Devices & services → Spectrum → Download diagnostics**.
-- Diagnostics automatically redact OAuth access/refresh/ID tokens, **Wi-Fi Network** passphrases, account numbers, MAC addresses, serial numbers, WAN IP addresses, and subscriber contact details.
 - **Wi-Fi Network** and **Additional Network** password sensors are disabled by default in the Entity Registry so credentials are only exposed if explicitly enabled.
 - Config entry unique IDs hash account identifiers with SHA-256 so raw account numbers are never stored as Home Assistant unique IDs.
 - All communication goes directly between your Home Assistant instance and Spectrum's official endpoints (`id.spectrum.net` and `apis.spectrum.net`) via [`aiospectrum`](https://github.com/ColeMundus/aiospectrum).

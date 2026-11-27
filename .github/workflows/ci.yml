@@ -18,6 +18,12 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        lane:
+          - minimum
+          - latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -27,7 +33,9 @@ jobs:
           version: "0.12.19"
           python-version: "3.14.7"
           enable-cache: true
-      - run: uv sync --no-sources
+      - run: uv sync --no-sources --no-default-groups --group dev --group "${LANE}"
+        env:
+          LANE: ${{ matrix.lane }}
       - run: uv pip check
       - run: git diff --check
       - run: uv run --no-sync ruff check .

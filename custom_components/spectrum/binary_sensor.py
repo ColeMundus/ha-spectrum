@@ -47,6 +47,8 @@ from .entity import (
     set_top_box_device_info,
 )
 
+PARALLEL_UPDATES = 0
+
 _NEGATIVE_OUTAGE_ELIGIBILITY = frozenset(
     {"NOT_ELIGIBLE", "INELIGIBLE", "NONE", "FALSE", "NO", "UNAVAILABLE", "N/A"}
 )
@@ -591,8 +593,7 @@ class SpectrumRouterSecurityThreatsBinarySensor(
     def available(self) -> bool:
         return super().available and self._current_router() is not None
 
-    @property
-    def is_on(self) -> bool | None:
+    def _current_threats(self) -> list[SecurityThreat] | None:
         router = self._current_router()
         if router is None:
             return None
@@ -601,7 +602,25 @@ class SpectrumRouterSecurityThreatsBinarySensor(
             if self._equipment_coordinator.data is not None
             else None
         )
-        return bool(_router_threats(router, self.coordinator.data, equipment))
+        return _router_threats(router, self.coordinator.data, equipment)
+
+    @property
+    def is_on(self) -> bool | None:
+        threats = self._current_threats()
+        if threats is None:
+            return None
+        return any(threat.ended_at is None for threat in threats)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        threats = self._current_threats()
+        if threats is None:
+            return None
+        active_count = sum(1 for threat in threats if threat.ended_at is None)
+        return {
+            "active_threats": active_count,
+            "total_threats": len(threats),
+        }
 
 
 class SpectrumModemConnectivityBinarySensor(
@@ -891,6 +910,8 @@ async def async_setup_entry(
 
         for stb in equipment.set_top_boxes:
             if not stb.id:
+                continue
+            if not (stb.supports("CONNECTION_STATE") or stb.is_online is not None):
                 continue
             _append(
                 SpectrumSetTopBoxConnectivityBinarySensor(

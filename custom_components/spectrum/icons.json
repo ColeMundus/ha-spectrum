@@ -1,0 +1,439 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "active_outage": {
+        "default": "mdi:check-network-outline",
+        "state": {
+          "on": "mdi:alert-circle-outline"
+        }
+      },
+      "outage_credit_eligible": {
+        "default": "mdi:cash-remove",
+        "state": {
+          "on": "mdi:cash-refund"
+        }
+      },
+      "outage_credit_enrolled": {
+        "default": "mdi:cash-clock",
+        "state": {
+          "on": "mdi:cash-check"
+        }
+      },
+      "outage_callback_eligible": {
+        "default": "mdi:phone-off-outline",
+        "state": {
+          "on": "mdi:phone-alert-outline"
+        }
+      },
+      "autopay": {
+        "default": "mdi:credit-card-off-outline",
+        "state": {
+          "on": "mdi:credit-card-check-outline"
+        }
+      },
+      "delinquent": {
+        "default": "mdi:check-decagram-outline",
+        "state": {
+          "on": "mdi:cash-remove"
+        }
+      },
+      "seasonal_suspend": {
+        "default": "mdi:pause-circle-outline",
+        "state": {
+          "on": "mdi:snowflake-alert"
+        }
+      },
+      "service_appointment_alert": {
+        "default": "mdi:calendar-check-outline",
+        "state": {
+          "on": "mdi:calendar-alert"
+        }
+      },
+      "connectivity": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "on": "mdi:lan-connect"
+        }
+      },
+      "modem_connectivity": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "on": "mdi:wan"
+        }
+      },
+      "security_shield_threats_active": {
+        "default": "mdi:shield-check-outline",
+        "state": {
+          "on": "mdi:shield-alert"
+        }
+      },
+      "additional_network_active": {
+        "default": "mdi:wifi-off",
+        "state": {
+          "on": "mdi:wifi-plus"
+        }
+      },
+      "cellular_backup_ready": {
+        "default": "mdi:cellphone-off",
+        "state": {
+          "on": "mdi:cellphone-check"
+        }
+      },
+      "cellular_backup_in_use": {
+        "default": "mdi:signal-cellular-outline",
+        "state": {
+          "on": "mdi:signal-cellular-3"
+        }
+      },
+      "t4_timeout_threshold": {
+        "default": "mdi:timer-check-outline",
+        "state": {
+          "on": "mdi:timer-alert-outline"
+        }
+      },
+      "ethernet_port_speed_healthy": {
+        "default": "mdi:ethernet-cable-off",
+        "state": {
+          "on": "mdi:ethernet"
+        }
+      },
+      "speed_achievable": {
+        "default": "mdi:speedometer-slow",
+        "state": {
+          "on": "mdi:speedometer"
+        }
+      },
+      "hot_listed": {
+        "default": "mdi:shield-check-outline",
+        "state": {
+          "on": "mdi:alert-octagon"
+        }
+      },
+      "quarantined": {
+        "default": "mdi:shield-check-outline",
+        "state": {
+          "on": "mdi:shield-lock-outline"
+        }
+      }
+    },
+    "sensor": {
+      "outage_count": {
+        "default": "mdi:alert-circle-outline"
+      },
+      "outage_status": {
+        "default": "mdi:transmission-tower-off"
+      },
+      "outage_message": {
+        "default": "mdi:message-alert-outline"
+      },
+      "outage_services_affected": {
+        "default": "mdi:format-list-bulleted-type"
+      },
+      "outage_estimated_resolution": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "outage_cause": {
+        "default": "mdi:help-circle-outline"
+      },
+      "next_service_appointment": {
+        "default": "mdi:calendar-clock"
+      },
+      "service_appointment_status": {
+        "default": "mdi:calendar-account-outline"
+      },
+      "service_appointment_count": {
+        "default": "mdi:calendar-multiple"
+      },
+      "current_balance": {
+        "default": "mdi:currency-usd"
+      },
+      "amount_due": {
+        "default": "mdi:cash-multiple"
+      },
+      "past_due_amount": {
+        "default": "mdi:cash-remove"
+      },
+      "pending_payment": {
+        "default": "mdi:cash-clock"
+      },
+      "last_payment": {
+        "default": "mdi:cash-check"
+      },
+      "upcoming_autopay_charge": {
+        "default": "mdi:credit-card-clock-outline"
+      },
+      "next_autopay_date": {
+        "default": "mdi:calendar-sync"
+      },
+      "payment_due_date": {
+        "default": "mdi:calendar-alert"
+      },
+      "next_billing_cycle": {
+        "default": "mdi:calendar-refresh"
+      },
+      "account_status": {
+        "default": "mdi:account-check-outline"
+      },
+      "monetary_status": {
+        "default": "mdi:receipt-text-outline"
+      },
+      "provisioned_services": {
+        "default": "mdi:package-variant-closed"
+      },
+      "internet_plan": {
+        "default": "mdi:web"
+      },
+      "subscribed_download_speed": {
+        "default": "mdi:download-network-outline"
+      },
+      "subscribed_upload_speed": {
+        "default": "mdi:upload-network-outline"
+      },
+      "speed_test_download": {
+        "default": "mdi:download"
+      },
+      "speed_test_upload": {
+        "default": "mdi:upload"
+      },
+      "speed_test_latency": {
+        "default": "mdi:timer-outline"
+      },
+      "speed_test_jitter": {
+        "default": "mdi:pulse"
+      },
+      "speed_test_packet_loss": {
+        "default": "mdi:network-strength-1-alert"
+      },
+      "speed_test_last_run": {
+        "default": "mdi:clock-check-outline"
+      },
+      "speed_test_status": {
+        "default": "mdi:speedometer"
+      },
+      "wifi_coverage_score": {
+        "default": "mdi:wifi-strength-3"
+      },
+      "connected_clients": {
+        "default": "mdi:devices"
+      },
+      "total_clients": {
+        "default": "mdi:lan"
+      },
+      "paused_clients": {
+        "default": "mdi:pause-octagon-outline"
+      },
+      "ip_reservation_count": {
+        "default": "mdi:ip-network-outline"
+      },
+      "port_forward_count": {
+        "default": "mdi:transit-connection-variant"
+      },
+      "security_shield_threats": {
+        "default": "mdi:shield-bug-outline"
+      },
+      "wan_ipv4": {
+        "default": "mdi:wan"
+      },
+      "wan_ipv6": {
+        "default": "mdi:ip-outline"
+      },
+      "lan_ipv4": {
+        "default": "mdi:ip-network"
+      },
+      "dns_mode": {
+        "default": "mdi:dns-outline"
+      },
+      "primary_dns": {
+        "default": "mdi:dns"
+      },
+      "secondary_dns": {
+        "default": "mdi:dns-outline"
+      },
+      "wifi_network_name": {
+        "default": "mdi:wifi"
+      },
+      "wifi_password": {
+        "default": "mdi:wifi-lock"
+      },
+      "additional_network_name": {
+        "default": "mdi:wifi-plus"
+      },
+      "additional_network_password": {
+        "default": "mdi:key-wireless"
+      },
+      "connection_state": {
+        "default": "mdi:lan-connect"
+      },
+      "modem_connection_state": {
+        "default": "mdi:wan"
+      },
+      "firmware_version": {
+        "default": "mdi:chip"
+      },
+      "docsis_capability": {
+        "default": "mdi:router-network"
+      },
+      "cellular_backup_signal": {
+        "default": "mdi:signal-cellular-2"
+      },
+      "cellular_backup_usage": {
+        "default": "mdi:database-outline"
+      },
+      "cellular_backup_status": {
+        "default": "mdi:cellphone-wireless"
+      },
+      "thread_channel": {
+        "default": "mdi:access-point-network"
+      },
+      "pod_connected_clients": {
+        "default": "mdi:devices"
+      },
+      "pod_backhaul_type": {
+        "default": "mdi:transit-connection"
+      },
+      "pod_backhaul_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "pod_coverage_score": {
+        "default": "mdi:wifi-strength-3"
+      }
+    },
+    "switch": {
+      "security_shield": {
+        "default": "mdi:shield-off-outline",
+        "state": {
+          "on": "mdi:shield-check"
+        }
+      },
+      "upnp": {
+        "default": "mdi:lan-pending",
+        "state": {
+          "on": "mdi:lan-connect"
+        }
+      },
+      "hotspot": {
+        "default": "mdi:wifi-off",
+        "state": {
+          "on": "mdi:wifi-marker"
+        }
+      },
+      "thread_radio": {
+        "default": "mdi:access-point-network-off",
+        "state": {
+          "on": "mdi:access-point-network"
+        }
+      },
+      "client_group_pause": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "on": "mdi:pause-octagon"
+        }
+      },
+      "client_pause": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "on": "mdi:pause-octagon"
+        }
+      }
+    },
+    "button": {
+      "reboot": {
+        "default": "mdi:restart"
+      },
+      "reboot_modem": {
+        "default": "mdi:restart"
+      },
+      "run_speed_test": {
+        "default": "mdi:speedometer"
+      },
+      "run_modem_speed_test": {
+        "default": "mdi:speedometer"
+      },
+      "smart_steer": {
+        "default": "mdi:wifi-sync"
+      },
+      "refresh": {
+        "default": "mdi:refresh"
+      }
+    },
+    "select": {
+      "pod_led_mode": {
+        "default": "mdi:led-outline",
+        "state": {
+          "normal": "mdi:led-outline",
+          "locate": "mdi:led-on"
+        }
+      }
+    },
+    "device_tracker": {
+      "client": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect",
+          "not_home": "mdi:lan-disconnect"
+        }
+      }
+    },
+    "image": {
+      "wifi_qr": {
+        "default": "mdi:qrcode"
+      },
+      "additional_network_qr": {
+        "default": "mdi:qrcode-plus"
+      }
+    }
+  },
+  "services": {
+    "add_port_forward": {
+      "service": "mdi:plus-network"
+    },
+    "update_port_forward": {
+      "service": "mdi:pencil-outline"
+    },
+    "delete_port_forward": {
+      "service": "mdi:minus-network"
+    },
+    "get_port_forwards": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "set_ip_reservation": {
+      "service": "mdi:ip-network"
+    },
+    "delete_ip_reservation": {
+      "service": "mdi:ip-network-outline"
+    },
+    "set_access_schedule": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_dns": {
+      "service": "mdi:dns"
+    },
+    "update_wifi": {
+      "service": "mdi:wifi-cog"
+    },
+    "set_additional_network": {
+      "service": "mdi:wifi-plus"
+    },
+    "delete_additional_network": {
+      "service": "mdi:wifi-remove"
+    },
+    "rename_client": {
+      "service": "mdi:form-textbox"
+    },
+    "remove_client": {
+      "service": "mdi:delete-outline"
+    },
+    "create_client_group": {
+      "service": "mdi:account-multiple-plus-outline"
+    },
+    "update_client_group": {
+      "service": "mdi:account-multiple-outline"
+    },
+    "delete_client_group": {
+      "service": "mdi:account-multiple-minus-outline"
+    },
+    "run_speed_test": {
+      "service": "mdi:speedometer"
+    }
+  }
+}

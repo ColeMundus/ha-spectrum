@@ -19,6 +19,8 @@ from .entity import (
     router_device_info,
 )
 
+PARALLEL_UPDATES = 0
+
 type WifiCredentials = tuple[str, str, str]
 
 
